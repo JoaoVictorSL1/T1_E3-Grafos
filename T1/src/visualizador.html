@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid MST - Visualizador Interativo</title>
+    <!-- Fonte Inter do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(30, 41, 59, 0.45);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00f0ff;
+            --accent-pink: #ff007f;
+            --accent-purple: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-blur: blur(12px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.06) 0%, transparent 40%);
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: var(--glass-blur);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Coluna Esquerda: Controles */
+        .controls-panel {
+            flex: 1;
+            min-width: 380px;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
+            backdrop-filter: var(--glass-blur);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Preset Buttons */
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(139, 92, 246, 0.2));
+            border-color: rgba(0, 240, 255, 0.4);
+        }
+
+        button.primary:hover {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(139, 92, 246, 0.3));
+            border-color: rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.02);
+        }
+
+        .upload-area p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .upload-area input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Sim Controls */
+        .simulation-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--accent-cyan);
+            transition: transform 0.1s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-top: 0.15rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-cyan);
+        }
+
+        /* Log console */
+        .log-console {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 100px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #10b981;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 0.25rem;
+        }
+
+        .log-line {
+            line-height: 1.3;
+        }
+
+        .log-line.error { color: #ef4444; }
+        .log-line.info { color: var(--accent-cyan); }
+        .log-line.success { color: #34d399; }
+
+        /* Coluna Direita: Visualizador */
+        .visualizer-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #0d121f;
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+            z-index: 1;
+        }
+
+        .canvas-help {
+            position: absolute;
+            bottom: 1rem;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: var(--glass-blur);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            pointer-events: none;
+            z-index: 2;
+            transition: opacity 0.3s ease;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            background: rgba(11, 15, 25, 0.5);
+        }
+
+        /* Badges */
+        .phase-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .phase-badge.setup { color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.2); }
+        .phase-badge.bfs { color: var(--accent-cyan); background: rgba(0, 240, 255, 0.1); border-color: rgba(0, 240, 255, 0.2); }
+        .phase-badge.kruskal { color: var(--accent-purple); background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.2); }
+        .phase-badge.done { color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ Grid MST Visualizador</h1>
+        <p>Busca em Largura Multi-Origem (Voronoi) e Algoritmo de Kruskal em Grade 2D</p>
+    </header>
+
+    <div class="container">
+        
+        <!-- Coluna Esquerda -->
+        <div class="controls-panel">
+            
+            <!-- Card 1: Carregar Dados -->
+            <div class="card">
+                <h2>📁 Dados de Entrada</h2>
+                <div class="preset-buttons" style="margin-bottom: 0.75rem;">
+                    <button onclick="loadPreset('exemplo1')">Exemplo 1 (N=4)</button>
+                    <button onclick="loadPreset('exemplo2')">Exemplo 2 (N=5)</button>
+                    <button onclick="loadPreset('limite')">Limite (N=2)</button>
+                    <button onclick="loadPreset('medio')">Médio (N=20)</button>
+                </div>
+                
+                <div class="upload-area">
+                    <p>📥 Arraste um arquivo <code>.in</code>/<code>.txt</code> aqui ou clique para selecionar</p>
+                    <input type="file" id="file-uploader" accept=".txt,.in" onchange="handleFileUpload(event)">
+                </div>
+                
+                <div style="margin-top: 0.75rem; display: flex; justify-content: space-between; gap: 0.5rem;">
+                    <button onclick="generateRandomPoints(15)" style="flex: 1;">+15 Aleatórios</button>
+                    <button onclick="clearCanvas()" style="flex: 1; border-color: rgba(239, 68, 68, 0.2); color: #ef4444;">Limpar Tela</button>
+                </div>
+            </div>
+
+            <!-- Card 2: Simulação -->
+            <div class="card">
+                <h2>⚙️ Controles da Simulação</h2>
+                <div class="simulation-controls">
+                    <button id="btn-play" class="primary" onclick="togglePlay()">▶ Iniciar</button>
+                    <button onclick="stepSim()">➔ Passo</button>
+                    <button onclick="resetSim()">↺ Reiniciar</button>
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Velocidade de Animação</span>
+                        <span id="speed-val">50%</span>
+                    </div>
+                    <input type="range" id="sim-speed" min="1" max="100" value="50" oninput="updateSpeed()">
+                </div>
+            </div>
+
+            <!-- Card 3: Dashboard -->
+            <div class="card" style="flex: 1; display: flex; flex-direction: column; gap: 0.75rem;">
+                <h2>📊 Painel Informativo</h2>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Pontos (N)</div>
+                        <div class="stat-value" id="stat-n">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Pontos Únicos (K)</div>
+                        <div class="stat-value" id="stat-k">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Arestas Candidatas</div>
+                        <div class="stat-value" id="stat-edges">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Peso da MST</div>
+                        <div class="stat-value" id="stat-mst-weight" style="color: #34d399;">0</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Status Atual:</span>
+                    <span id="phase-badge" class="phase-badge setup">Aguardando</span>
+                </div>
+
+                <div class="log-console" id="console">
+                    <div class="log-line">Console de execução inicializado.</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Coluna Direita -->
+        <div class="visualizer-panel">
+            <div class="canvas-container">
+                <canvas id="grid-canvas" width="600" height="600"></canvas>
+            </div>
+            <div class="canvas-help" id="canvas-help">
+                💡 Clique em qualquer lugar da grade acima para desenhar novos pontos!
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Trabalho Prático 1 - Unidade 3 | Resolução de Problemas com Grafos</p>
+    </footer>
+
+    <!-- Lógica JS Incorporada para portabilidade autocontida -->
+    <script>
+        // Configurações Globais
+        const canvas = document.getElementById('grid-canvas');
+        const ctx = canvas.getContext('2d');
+        const canvasSize = 600;
+        
+        let rawPoints = []; // [{x, y}]
+        let uniquePoints = []; // [{x, y}]
+        let coordScale = 1;
+        let maxCoord = 1000;
+        let gridSize = 100; // Resolução visual do grid
+        
+        // Estrutura do DSU para o Kruskal na tela
+        class JS_UF {
+            constructor(n) {
+                this.parent = Array.from({length: n}, (_, i) => i);
+                this.sz = Array(n).fill(1);
+            }
+            find(p) {
+                let root = p;
+                while (root !== this.parent[root]) {
+                    root = this.parent[root];
+                }
+                let curr = p;
+                while (curr !== root) {
+                    let nxt = this.parent[curr];
+                    this.parent[curr] = root;
+                    curr = nxt;
+                }
+                return root;
+            }
+            connected(p, q) {
+                return this.find(p) === this.find(q);
+            }
+            union(p, q) {
+                let rootP = this.find(p);
+                let rootQ = this.find(q);
+                if (rootP === rootQ) return false;
+                if (this.sz[rootP] < this.sz[rootQ]) {
+                    this.parent[rootP] = rootQ;
+                    this.sz[rootQ] += this.sz[rootP];
+                } else {
+                    this.parent[rootQ] = rootP;
+                    this.sz[rootP] += this.sz[rootQ];
+                }
+                return true;
+            }
+        }
+
+        // Estado da Animação
+        let isPlaying = false;
+        let playInterval = null;
+        let currentPhase = 'setup'; // 'setup', 'bfs', 'edges', 'kruskal', 'done'
+        
+        // Estruturas da simulação
+        let gridOwner = []; // 1D array de tamanho gridSize * gridSize
+        let gridDist = []; // 1D array de distâncias
+        let bfsQueue = [];
+        let bfsStepCount = 0;
+        let candidateEdges = []; // [{u, v, w}]
+        let kruskalEdges = []; // arestas ordenadas
+        let kruskalIndex = 0;
+        let mstWeight = 0;
+        let mstEdges = []; // [{u, v}]
+        let rejectedEdges = []; // [{u, v}] que formam ciclo
+        let uf = null;
+
+        // Gerador de cores baseadas na proporção áurea
+        function getNeonColor(index) {
+            const predefined = [
+                '#ff007f', // pink
+                '#00f0ff', // cyan
+                '#a855f7', // purple
+                '#22c55e', // green
+                '#eab308', // orange
+                '#f43f5e', // crimson
+                '#06b6d4', // turquoise
+                '#ec4899', // bubblegum
+                '#3b82f6', // bright blue
+                '#f97316', // bright orange
+            ];
+            if (index < predefined.length) return predefined[index];
+            // Distribuição uniforme usando Golden Angle
+            const hue = (index * 137.5) % 360;
+            return `hsl(${hue}, 100%, 60%)`;
+        }
+
+        // Registrar mensagens no console visual
+        function log(message, type = 'info') {
+            const consoleEl = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            line.innerHTML = `[${time}] ${message}`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Configurar e inicializar dados
+        function initData() {
+            // Deduplicar mantendo ordem
+            const seen = new Set();
+            uniquePoints = [];
+            rawPoints.forEach(p => {
+                const key = `${p.x},${p.y}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniquePoints.push(p);
+                }
+            });
+
+            document.getElementById('stat-n').innerText = rawPoints.length;
+            document.getElementById('stat-k').innerText = uniquePoints.length;
+            
+            // Determinar escala de coordenadas
+            if (uniquePoints.length > 0) {
+                const maxX = Math.max(...uniquePoints.map(p => p.x));
+                const maxY = Math.max(...uniquePoints.map(p => p.y));
+                maxCoord = Math.max(maxX, maxY, 1);
+                
+                // Se maxCoord for muito pequeno, garantimos tamanho mínimo visual do grid
+                if (maxCoord <= 15) {
+                    gridSize = maxCoord + 2;
+                } else if (maxCoord <= 50) {
+                    gridSize = maxCoord + 5;
+                } else {
+                    gridSize = 100; // downsample visual para grids gigantes (como 1000)
+                }
+            } else {
+                maxCoord = 1000;
+                gridSize = 100;
+            }
+
+            resetSim();
+            draw();
+        }
+
+        // Resetar o estado da simulação
+        function resetSim() {
+            isPlaying = false;
+            if (playInterval) clearInterval(playInterval);
+            document.getElementById('btn-play').innerText = '▶ Iniciar';
+            document.getElementById('btn-play').classList.add('primary');
+
+            currentPhase = uniquePoints.length > 1 ? 'bfs' : 'setup';
+            updatePhaseBadge();
+
+            // Configurar BFS
+            const size = gridSize * gridSize;
+            gridOwner = new Array(size).fill(-1);
+            gridDist = new Array(size).fill(-1);
+            bfsQueue = [];
+            bfsStepCount = 0;
+            candidateEdges = [];
+            kruskalEdges = [];
+            kruskalIndex = 0;
+            mstWeight = 0;
+            mstEdges = [];
+            rejectedEdges = [];
+            uf = new JS_UF(uniquePoints.length);
+
+            document.getElementById('stat-edges').innerText = '0';
+            document.getElementById('stat-mst-weight').innerText = '0';
+
+            if (uniquePoints.length > 1) {
+                // Inserir origens da BFS
+                uniquePoints.forEach((p, idx) => {
+                    // Mapeia coordenadas originais do ponto para a célula correspondente no grid animado
+                    const gx = Math.min(Math.round((p.x / maxCoord) * (gridSize - 1)), gridSize - 1);
+                    const gy = Math.min(Math.round((p.y / maxCoord) * (gridSize - 1)), gridSize - 1);
+                    const cell = gx * gridSize + gy;
+                    
+                    gridOwner[cell] = idx;
+                    gridDist[cell] = 0;
+                    bfsQueue.push({x: gx, y: gy, owner: idx, dist: 0});
+                });
+                log(`Simulação pronta. ${uniquePoints.length} origens inicializadas na BFS.`);
+            } else {
+                log("Insira pelo menos 2 pontos para rodar a simulação.");
+            }
+            draw();
+        }
+
+        // Atualizar crachá de fase
+        function updatePhaseBadge() {
+            const badge = document.getElementById('phase-badge');
+            badge.className = `phase-badge ${currentPhase}`;
+            if (currentPhase === 'setup') badge.innerText = 'Aguardando';
+            if (currentPhase === 'bfs') badge.innerText = 'BFS Multi-Origem';
+            if (currentPhase === 'edges') badge.innerText = 'Bordas e Arestas';
+            if (currentPhase === 'kruskal') badge.innerText = 'Kruskal & DSU';
+            if (currentPhase === 'done') badge.innerText = 'Finalizado';
+        }
+
+        // Avançar um passo da simulação
+        function stepSim() {
+            if (currentPhase === 'setup') return;
+
+            if (currentPhase === 'bfs') {
+                if (bfsQueue.length > 0) {
+                    runBfsStep();
+                } else {
+                    currentPhase = 'edges';
+                    updatePhaseBadge();
+                    log("BFS concluída. Iniciando extração de arestas candidatas...", 'success');
+                }
+            } else if (currentPhase === 'edges') {
+                extractEdges();
+                currentPhase = 'kruskal';
+                updatePhaseBadge();
+            } else if (currentPhase === 'kruskal') {
+                if (kruskalIndex < kruskalEdges.length && mstEdges.length < uniquePoints.length - 1) {
+                    runKruskalStep();
+                } else {
+                    currentPhase = 'done';
+                    updatePhaseBadge();
+                    togglePlay(false);
+                    log(`Árvore Geradora Mínima concluída! Peso total: ${mstWeight}`, 'success');
+                }
+            }
+            draw();
+        }
+
+        // Um nível/passo de expansão na BFS
+        function runBfsStep() {
+            const levelSize = bfsQueue.length;
+            const nextQueue = [];
+            
+            for (let i = 0; i < levelSize; i++) {
+                const curr = bfsQueue[i];
+                const u_cell = curr.x * gridSize + curr.y;
+                const nextD = curr.dist + 1;
+                
+                // Vizinhos
+                const dirs = [
+                    {x: curr.x - 1, y: curr.y},
+                    {x: curr.x + 1, y: curr.y},
+                    {x: curr.x, y: curr.y - 1},
+                    {x: curr.x, y: curr.y + 1}
+                ];
+                
+                dirs.forEach(n => {
+                    if (n.x >= 0 && n.x < gridSize && n.y >= 0 && n.y < gridSize) {
+                        const n_cell = n.x * gridSize + n.y;
+                        if (gridOwner[n_cell] === -1) {
+                            gridOwner[n_cell] = curr.owner;
+                            gridDist[n_cell] = nextD;
+                            nextQueue.push({x: n.x, y: n.y, owner: curr.owner, dist: nextD});
+                        }
+                    }
+                });
+            }
+            
+            bfsStepCount++;
+            bfsQueue = nextQueue;
+            if (bfsQueue.length === 0) {
+                log("Todas as células foram preenchidas pela BFS.");
+            }
+        }
+
+        // Extrair arestas candidatas por adjacência de células de donos diferentes
+        function extractEdges() {
+            const edgesMap = new Map(); // "u-v" -> weight
+
+            for (let x = 0; x < gridSize; x++) {
+                const offset = x * gridSize;
+                for (let y = 0; y < gridSize; y++) {
+                    const u_cell = offset + y;
+                    const u_owner = gridOwner[u_cell];
+                    
+                    if (u_owner === -1) continue;
+
+                    // Vizinho da direita
+                    if (y < gridSize - 1) {
+                        const r_cell = u_cell + 1;
+                        const r_owner = gridOwner[r_cell];
+                        if (r_owner !== -1 && u_owner !== r_owner) {
+                            // Peso aproximado correspondente
+                            const w = gridDist[u_cell] + gridDist[r_cell] + 1;
+                            const u = Math.min(u_owner, r_owner);
+                            const v = Math.max(u_owner, r_owner);
+                            const key = `${u}-${v}`;
+                            if (!edgesMap.has(key) || w < edgesMap.get(key)) {
+                                edgesMap.set(key, w);
+                            }
+                        }
+                    }
+
+                    // Vizinho de baixo
+                    if (x < gridSize - 1) {
+                        const b_cell = u_cell + gridSize;
+                        const b_owner = gridOwner[b_cell];
+                        if (b_owner !== -1 && u_owner !== b_owner) {
+                            const w = gridDist[u_cell] + gridDist[b_cell] + 1;
+                            const u = Math.min(u_owner, b_owner);
+                            const v = Math.max(u_owner, b_owner);
+                            const key = `${u}-${v}`;
+                            if (!edgesMap.has(key) || w < edgesMap.get(key)) {
+                                edgesMap.set(key, w);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Converter para lista
+            kruskalEdges = [];
+            edgesMap.forEach((w, key) => {
+                const [u, v] = key.split('-').map(Number);
+                kruskalEdges.push({u, v, w});
+            });
+
+            // Ordenar por peso
+            kruskalEdges.sort((a, b) => a.w - b.w);
+            document.getElementById('stat-edges').innerText = kruskalEdges.length;
+            log(`Fronteiras identificadas! Extraídas ${kruskalEdges.length} arestas candidatas esparsas.`, 'success');
+            log("Arestas ordenadas por peso. Iniciando unificação com DSU.");
+        }
+
+        // Um passo do algoritmo de Kruskal
+        function runKruskalStep() {
+            const edge = kruskalEdges[kruskalIndex];
+            kruskalIndex++;
+
+            const p1 = uniquePoints[edge.u];
+            const p2 = uniquePoints[edge.v];
+            
+            // Peso real de Manhattan (calculado sobre os dados de entrada de verdade)
+            const realWeight = Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
+
+            if (!uf.connected(edge.u, edge.v)) {
+                uf.union(edge.u, edge.v);
+                mstEdges.push({u: edge.u, v: edge.v});
+                mstWeight += realWeight;
+                document.getElementById('stat-mst-weight').innerText = mstWeight;
+                log(`Aresta aceita: Ponto ${edge.u} ⟷ Ponto ${edge.v} (Peso: ${realWeight}).`, 'success');
+            } else {
+                rejectedEdges.push({u: edge.u, v: edge.v});
+                log(`Aresta descartada: Ponto ${edge.u} ⟷ Ponto ${edge.v} cria ciclo no DSU.`, 'error');
+            }
+        }
+
+        // Alternar Play / Pause de simulação
+        function togglePlay(forceState = null) {
+            isPlaying = forceState !== null ? forceState : !isPlaying;
+            const btn = document.getElementById('btn-play');
+            
+            if (isPlaying) {
+                if (currentPhase === 'done') resetSim();
+                btn.innerText = '⏸ Pausar';
+                btn.classList.remove('primary');
+                
+                const speedSlider = document.getElementById('sim-speed');
+                const delay = Math.max(10, 1010 - speedSlider.value * 10);
+                
+                playInterval = setInterval(() => {
+                    stepSim();
+                }, delay);
+            } else {
+                btn.innerText = '▶ Iniciar';
+                btn.classList.add('primary');
+                if (playInterval) clearInterval(playInterval);
+            }
+        }
+
+        // Atualizar velocidade da simulação ao arrastar slider
+        function updateSpeed() {
+            const val = document.getElementById('sim-speed').value;
+            document.getElementById('speed-val').innerText = `${val}%`;
+            if (isPlaying) {
+                // Reinicia o timer com o novo delay
+                togglePlay(false);
+                togglePlay(true);
+            }
+        }
+
+        // Desenhar no Canvas
+        function draw() {
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+            
+            // Fundo escuro do canvas
+            ctx.fillStyle = '#0d121f';
+            ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+            const cellW = canvasSize / gridSize;
+
+            // 1. Desenhar a grade colorida pela BFS (células de Voronoi)
+            for (let x = 0; x < gridSize; x++) {
+                for (let y = 0; y < gridSize; y++) {
+                    const cell = x * gridSize + y;
+                    const owner = gridOwner[cell];
+                    if (owner !== -1) {
+                        ctx.fillStyle = getNeonColor(owner);
+                        // Desenha com preenchimento muito suave (transparência de 8%)
+                        ctx.globalAlpha = 0.08;
+                        ctx.fillRect(y * cellW, x * cellW, cellW, cellW);
+                        
+                        // Opcional: Efeito nas bordas
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            }
+
+            // 2. Desenhar as fronteiras celulares pontilhadas
+            if (currentPhase === 'edges' || currentPhase === 'kruskal' || currentPhase === 'done') {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.lineWidth = 1;
+                for (let x = 0; x < gridSize; x++) {
+                    for (let y = 0; y < gridSize; y++) {
+                        const cell = x * gridSize + y;
+                        const owner = gridOwner[cell];
+                        
+                        if (y < gridSize - 1 && gridOwner[cell + 1] !== -1 && owner !== gridOwner[cell + 1]) {
+                            ctx.beginPath();
+                            ctx.moveTo((y + 1) * cellW, x * cellW);
+                            ctx.lineTo((y + 1) * cellW, (x + 1) * cellW);
+                            ctx.stroke();
+                        }
+                        if (x < gridSize - 1 && gridOwner[cell + gridSize] !== -1 && owner !== gridOwner[cell + gridSize]) {
+                            ctx.beginPath();
+                            ctx.moveTo(y * cellW, (x + 1) * cellW);
+                            ctx.lineTo((y + 1) * cellW, (x + 1) * cellW);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            // Função para mapear ponto original para pixel no Canvas
+            function mapPointToCanvas(p) {
+                // margem de 30px
+                const pad = 40;
+                const innerSize = canvasSize - 2 * pad;
+                const cx = pad + (p.y / maxCoord) * innerSize; // y representa colunas (x no canvas)
+                const cy = pad + (p.x / maxCoord) * innerSize; // x representa linhas (y no canvas)
+                return {cx, cy};
+            }
+
+            // 3. Desenhar arestas rejeitadas temporariamente (em vermelho fading)
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.25)';
+            ctx.setLineDash([4, 4]);
+            rejectedEdges.forEach(e => {
+                const c1 = mapPointToCanvas(uniquePoints[e.u]);
+                const c2 = mapPointToCanvas(uniquePoints[e.v]);
+                ctx.beginPath();
+                ctx.moveTo(c1.cx, c1.cy);
+                ctx.lineTo(c2.cx, c2.cy);
+                ctx.stroke();
+            });
+            ctx.setLineDash([]); // Limpa padrão pontilhado
+
+            // 4. Desenhar arestas aceitas da MST (neon glowing cyan)
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+            ctx.strokeStyle = varColor('--accent-cyan');
+            ctx.lineWidth = 3.5;
+            mstEdges.forEach(e => {
+                const c1 = mapPointToCanvas(uniquePoints[e.u]);
+                const c2 = mapPointToCanvas(uniquePoints[e.v]);
+                ctx.beginPath();
+                ctx.moveTo(c1.cx, c1.cy);
+                ctx.lineTo(c2.cx, c2.cy);
+                ctx.stroke();
+            });
+            
+            // Reset do glow shadow
+            ctx.shadowBlur = 0;
+
+            // 5. Desenhar as origens (vértices) na grade
+            uniquePoints.forEach((p, idx) => {
+                const c = mapPointToCanvas(p);
+                const color = getNeonColor(idx);
+                
+                // Desenhar auréola brilhante
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.35;
+                ctx.beginPath();
+                ctx.arc(c.cx, c.cy, 9, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Desenhar núcleo principal
+                ctx.globalAlpha = 1.0;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(c.cx, c.cy, 5, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(c.cx, c.cy, 5, 0, 2 * Math.PI);
+                ctx.stroke();
+
+                // Escrever o ID do ponto
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 9px "JetBrains Mono", monospace';
+                ctx.fillText(idx, c.cx + 9, c.cy - 7);
+            });
+        }
+
+        // Função utilitária para pegar cor css do root
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        // Carregar Casos de Teste Predefinidos (Presets)
+        function loadPreset(key) {
+            log(`Carregando caso de teste: ${key.toUpperCase()}`);
+            let content = "";
+            if (key === 'exemplo1') {
+                content = "4\n0 0\n0 1\n1 0\n1 1";
+            } else if (key === 'exemplo2') {
+                content = "5\n0 0\n10 0\n10 0\n11 1\n12 2";
+            } else if (key === 'limite') {
+                content = "2\n0 0\n1000 1000";
+            } else if (key === 'medio') {
+                content = "20\n100 100\n100 100\n100 105\n105 100\n105 105\n200 200\n200 201\n201 200\n201 201\n50 50\n50 51\n51 50\n51 51\n0 1000\n1000 0\n500 500\n500 500\n502 502\n1000 1000\n0 0";
+            }
+            parseInputText(content);
+        }
+
+        // Processar texto bruto de entrada do Kattis
+        function parseInputText(text) {
+            try {
+                const tokens = text.trim().split(/\s+/);
+                if (tokens.length < 1 || tokens[0] === "") {
+                    throw new Error("Entrada vazia.");
+                }
+                const N = parseInt(tokens[0]);
+                if (isNaN(N)) throw new Error("Formato inválido de N.");
+                
+                const pts = [];
+                let idx = 1;
+                for (let i = 0; i < N; i++) {
+                    if (idx + 1 >= tokens.length) break;
+                    const x = parseInt(tokens[idx]);
+                    const y = parseInt(tokens[idx+1]);
+                    if (!isNaN(x) && !isNaN(y)) {
+                        pts.push({x, y});
+                    }
+                    idx += 2;
+                }
+
+                if (pts.length === 0) {
+                    throw new Error("Nenhum ponto válido encontrado.");
+                }
+
+                rawPoints = pts;
+                initData();
+                log(`Carregados ${rawPoints.length} pontos com sucesso.`, 'success');
+            } catch (err) {
+                log(`Erro ao ler entrada: ${err.message}`, 'error');
+            }
+        }
+
+        // Upload de arquivos
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                parseInputText(e.target.result);
+            };
+            reader.readAsText(file);
+        }
+
+        // Gerar pontos aleatórios no grid
+        function generateRandomPoints(count) {
+            rawPoints = [];
+            for (let i = 0; i < count; i++) {
+                rawPoints.push({
+                    x: Math.floor(Math.random() * 900) + 50,
+                    y: Math.floor(Math.random() * 900) + 50
+                });
+            }
+            initData();
+            log(`Gerados ${count} pontos aleatórios no intervalo [50, 950].`, 'success');
+        }
+
+        // Limpar toda a tela
+        function clearCanvas() {
+            rawPoints = [];
+            uniquePoints = [];
+            initData();
+            log("Canvas limpo.");
+        }
+
+        // Clique no Canvas para desenhar novos pontos
+        canvas.addEventListener('mousedown', function(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Margem e conversão reversa para coordenada no grid (0-1000)
+            const pad = 40;
+            const innerSize = canvasSize - 2 * pad;
+            
+            if (mouseX >= pad && mouseX <= canvasSize - pad && mouseY >= pad && mouseY <= canvasSize - pad) {
+                // Converte posição de pixel de volta a escala de coordenadas original
+                const gridY = Math.round(((mouseX - pad) / innerSize) * maxCoord);
+                const gridX = Math.round(((mouseY - pad) / innerSize) * maxCoord);
+                
+                rawPoints.push({x: gridX, y: gridY});
+                initData();
+                log(`Ponto adicionado manualmente na coordenada (${gridX}, ${gridY}).`);
+            }
+        });
+
+        // Inicializar com exemplo padrão
+        loadPreset('exemplo2');
+    </script>
+</body>
+</html>

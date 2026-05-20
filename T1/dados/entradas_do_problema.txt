@@ -1,0 +1,14 @@
+=== Exemplo de Entrada 1 ===
+4
+0 0
+0 1
+1 0
+1 1
+
+=== Exemplo de Entrada 2 ===
+5
+0 0
+10 0
+10 0
+11 1
+12 2
